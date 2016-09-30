@@ -308,17 +308,24 @@ static const struct ad7606_chip_info ad7606_chip_info_tbl[] = {
 	/*
 	 * More devices added in future
 	 */
+	[ID_AD7605_4] = {
+		.channels = ad7606_channels,
+		.num_channels = 5,
+	},
 	[ID_AD7606_8] = {
 		.channels = ad7606_channels,
 		.num_channels = 9,
+		.has_oversampling = true,
 	},
 	[ID_AD7606_6] = {
 		.channels = ad7606_channels,
 		.num_channels = 7,
+		.has_oversampling = true,
 	},
 	[ID_AD7606_4] = {
 		.channels = ad7606_channels,
 		.num_channels = 5,
+		.has_oversampling = true,
 	},
 };
 
@@ -348,6 +355,9 @@ static int ad7606_request_gpios(struct ad7606_state *st)
 						    GPIOD_IN);
 	if (IS_ERR(st->gpio_frstdata))
 		return PTR_ERR(st->gpio_frstdata);
+
+	if (!st->chip_info->has_oversampling)
+		return 0;
 
 	st->gpio_os = devm_gpiod_get_array_optional(dev, "oversampling-ratio",
 			GPIOD_OUT_LOW);
