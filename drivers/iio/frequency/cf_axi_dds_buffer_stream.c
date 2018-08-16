@@ -26,13 +26,22 @@ static int dds_buffer_submit_block(struct iio_dma_buffer_queue *queue,
 {
 	struct cf_axi_dds_state *st = iio_priv(queue->driver_data);
 
-	if (st->pl_dma_fifo_en && (block->block.flags & IIO_BUFFER_BLOCK_FLAG_CYCLIC)) {
-		block->block.flags &= ~IIO_BUFFER_BLOCK_FLAG_CYCLIC;
+	if (block->block.bytes_used) {
+		if (st->pl_dma_fifo_en) {
+			if (block->block.flags & IIO_BUFFER_BLOCK_FLAG_CYCLIC) {
+				block->block.flags &=
+					~IIO_BUFFER_BLOCK_FLAG_CYCLIC;
+				cf_axi_dds_pl_ddr_fifo_ctrl(st, true);
+			} else {
+				cf_axi_dds_pl_ddr_fifo_ctrl(st, false);
+			}
+		} else {
+			cf_axi_dds_pl_ddr_fifo_ctrl(st, false);
+		}
 	}
 
 	return iio_dmaengine_buffer_submit_block(queue, block, DMA_TO_DEVICE);
 }
-
 
 static int dds_buffer_state_set(struct iio_dev *indio_dev, bool state)
 {
